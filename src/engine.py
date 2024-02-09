@@ -59,8 +59,25 @@ class vLLMEngine:
         async for batch in generator(**generator_args):
             yield batch
 
-    async def generate_vllm(self, llm_input, validated_sampling_params, batch_size, stream, apply_chat_template, request_id: str) -> AsyncGenerator[dict, None]:
-        
+    async def generate_vllm(self, llm_input, validated_sampling_params, batch_size, stream, apply_chat_template, conv, context, request_id: str) -> AsyncGenerator[dict, None]:
+        past= """
+        You are an assistant named braino.
+        Your an insurance sales expert.
+        Your main goal is to help insurance agents with problems they face and also help them increase their sales skills.
+        Your answers should not exceed five sentences.
+        Always give short and concise answers
+        """
+        ans="""Use this context to answer the question use the entire context and also make sure to output all the point mentioned in the context.
+        ### Context:"""
+        if len(context)>10:
+            con = past+ans+context
+        else:
+            con=past 
+        c = """
+        user: hey
+        Braino: how can i help u today?
+        """
+        llm_input = con  + c + "\n" + conv + "\n" + "user:"+llm_input+"\n"+"Braino:"
         if apply_chat_template or isinstance(llm_input, list):
             llm_input = self.tokenizer.apply_chat_template(llm_input)
         validated_sampling_params = SamplingParams(**validated_sampling_params)
